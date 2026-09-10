@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% set r = record %}
+{% block title %}{{ r.label }}: {{ r.title[:60] }} — Billwatch{% endblock %}
+{% block content %}
+
+<p class="crumb"><a href="{{ depth }}months/{{ r.month }}.html">{{ r.month_label }}</a> &rsaquo; rank {{ r.rank }}</p>
+<h1>{{ r.title }}</h1>
+<p class="meta big">
+  <span class="billno">{{ r.label }}</span>
+  {% if r.sponsor %}<span>Sponsored by {{ r.sponsor }}</span>{% endif %}
+  <span class="tier tier-{{ r.breakdown.top_action_tier }}">{{ r.tier_label }}</span>
+</p>
+
+{% if r.summary %}
+<p class="takeaway big">{{ r.summary.takeaway }}</p>
+
+<section>
+  <h2>What it does</h2>
+  {% for para in r.summary.what_it_does.split('\n') %}{% if para.strip() %}<p>{{ para }}</p>{% endif %}{% endfor %}
+</section>
+
+{% if r.summary.key_provisions %}
+<section>
+  <h2>Key provisions</h2>
+  <dl class="provisions">
+    {% for p in r.summary.key_provisions %}
+    <dt>{{ p.provision }}</dt><dd>{{ p.plain_english }}</dd>
+    {% endfor %}
+  </dl>
+</section>
+{% endif %}
+
+{% if r.summary.who_it_affects %}
+<section>
+  <h2>Who it affects</h2>
+  <ul>{% for w in r.summary.who_it_affects %}<li>{{ w }}</li>{% endfor %}</ul>
+</section>
+{% endif %}
+
+<section>
+  <h2>Status</h2>
+  <p>{{ r.summary.status }}</p>
+</section>
+
+<section>
+  <h2>Points of contention</h2>
+  {% if r.summary.points_of_contention %}
+  <p class="note">Claims below are attributed, not endorsed. This site does not judge which side is right.</p>
+  <ul class="contention">
+    {% for c in r.summary.points_of_contention %}
+    <li><span class="who">{{ c.attributed_to }}:</span> {{ c.claim }}</li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="note">No significant public disagreement was identified in the bill text or its record.</p>
+  {% endif %}
+</section>
+
+{% if r.summary.uncertainty %}
+<section>
+  <h2>What the bill doesn't say</h2>
+  <p>{{ r.summary.uncertainty }}</p>
+</section>
+{% endif %}
+
+{% else %}
+<div class="callout">
+  <p><strong>No generated summary yet.</strong> This bill was selected for {{ r.month_label }}
+  but has not been summarized.</p>
+  {% if r.crs_summary %}
+  <h3>Congressional Research Service summary</h3>
+  <p>{{ r.crs_summary }}</p>
+  {% endif %}
+</div>
+{% endif %}
+
+<section>
+  <h2>Why this bill was selected</h2>
+  <p class="note">This ranking is arithmetic, not judgment. Here is the arithmetic.</p>
+  <table class="score">
+    <tr><th>Most consequential action this month</th><td>{{ r.tier_label }} ({{ r.breakdown.top_action_points }} pts)</td></tr>
+    <tr><td class="evidence" colspan="2">{{ r.breakdown.top_action_text }}</td></tr>
+    <tr><th>Cosponsors ({{ r.breakdown.cosponsors }})</th><td>+{{ r.breakdown.cosponsor_points }}</td></tr>
+    <tr><th>Bipartisan support</th><td>+{{ r.breakdown.bipartisan_points }}</td></tr>
+    <tr><th>Companion bill also moved</th><td>+{{ r.breakdown.companion_points }}</td></tr>
+    {% if r.breakdown.ceremonial %}
+    <tr><th>Ceremonial / naming bill</th><td>&times;{{ r.breakdown.multiplier }}</td></tr>
+    {% endif %}
+    <tr class="total"><th>Score</th><td>{{ r.score }}</td></tr>
+  </table>
+</section>
+
+<section class="sources">
+  <h2>Sources</h2>
+  <ul>
+    <li><a href="{{ r.url }}">Official record on congress.gov</a></li>
+    {% if r.policy_area %}<li>CRS policy area: {{ r.policy_area }}</li>{% endif %}
+    <li>Introduced {{ r.introduced_date }}. Latest action {{ r.latest_action_date }}: {{ r.latest_action_text }}</li>
+    {% if r.summary %}
+    <li>Summary written by <code>{{ r.model }}</code> (prompt <code>{{ r.prompt_version }}</code>)
+        from bill text version <code>{{ r.text_version_code|upper }}</code>.</li>
+    {% endif %}
+  </ul>
+</section>
+{% endblock %}

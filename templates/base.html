@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Congress Bill Summarizer{% endblock %}</title>
+<link rel="stylesheet" href="{{ depth }}style.css">
+</head>
+<body>
+<header class="site">
+  <a class="wordmark" href="{{ depth }}index.html">Bill<span>watch</span></a>
+  <nav>
+    <a href="{{ depth }}search.html">Search</a>
+    <a href="{{ depth }}about.html">Method</a>
+  </nav>
+</header>
+
+<div class="layout">
+  <aside>
+    <h3>Months</h3>
+    <ul class="sidelist">
+      {% for m, label in nav.months %}
+      <li><a href="{{ depth }}months/{{ m }}.html">{{ label }}</a></li>
+      {% endfor %}
+    </ul>
+    <h3>Topics</h3>
+    <ul class="sidelist">
+      {% for t, slug in nav.topics %}
+      <li><a href="{{ depth }}topics/{{ slug }}.html">{{ t }}</a></li>
+      {% endfor %}
+    </ul>
+  </aside>
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+</div>
+
+<footer>
+  <p>{{ stats.selections }} bill selections across {{ stats.months }} months.
+     {{ stats.summarized }} summarized, {{ stats.unsummarized }} pending.
+     Built {{ now }}.</p>
+  <p>Source data: <a href="https://www.govinfo.gov/bulkdata/BILLSTATUS">GovInfo BILLSTATUS</a>
+     and <a href="https://api.congress.gov/">the Congress.gov API</a>.
+     Summaries are machine-generated and should be checked against the bill text before being relied on.</p>
+</footer>
+</body>
+</html>

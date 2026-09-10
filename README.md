@@ -21,18 +21,42 @@ The methodology is published on the site's About page. It is meant to be argued 
 
 ## Status
 
-Early. Project scaffolding and the database schema are in place; the pipeline stages are
-not written yet.
+The pipeline runs end to end and the site builds. Summaries are the one thing not yet
+generated — that needs an Anthropic API key.
 
-| Stage | File | Status |
+| Stage | Command | Status |
 |---|---|---|
-| Ingest bulk bill data | `src/congress_summarizer/ingest.py` | not started |
-| Rank bills by monthly momentum | `src/congress_summarizer/rank.py` | not started |
-| Fetch bill text | `src/congress_summarizer/text.py` | not started |
-| Generate summaries | `src/congress_summarizer/summarize.py` | not started |
-| Build the static site | `src/congress_summarizer/build_site.py` | not started |
+| Ingest bulk bill data | `python -m congress_summarizer.ingest --congress 119` | working — 18,635 bills, 57,577 actions |
+| Rank by monthly momentum | `python -m congress_summarizer.rank --all-months` | working — 21 months, 100 bills each |
+| Fetch bill text | `python -m congress_summarizer.text --month 2026-07` | working — 100/100 for July 2026 |
+| Generate summaries | `python -m congress_summarizer.summarize --month 2026-07` | written, not yet run (needs API key) |
+| Build the static site | `python -m congress_summarizer.build_site` | working — 2,100 pages, 12 topics |
 
-Done: `pyproject.toml`, `schema.sql`, `db.py`.
+Prefix each with `uv run`. Use `python -m` rather than the console scripts: uv ships a
+`_virtualenv.pth` that sorts after hatchling's editable-install `.pth` and drops the path it
+added, so `uv run ingest` fails intermittently while `uv run python -m ...` always works.
+
+## Run it locally
+
+```bash
+uv sync
+uv run python -m congress_summarizer.ingest --congress 119
+uv run python -m congress_summarizer.rank --all-months
+uv run python -m congress_summarizer.build_site --clean
+cd site && python3 -m http.server 8000
+```
+
+Then open <http://localhost:8000>. Serve over HTTP rather than opening `index.html` from
+disk — search fetches a JSON index, which browsers block on `file://` URLs.
+
+Before spending anything on summaries, read a few:
+
+```bash
+uv run python -m congress_summarizer.summarize --month 2026-07 --limit 5 --no-batch
+```
+
+That runs synchronously at full price for five bills. If they read well, drop `--limit`
+and `--no-batch` to run the month through the Batch API at half price.
 
 ## Setup
 

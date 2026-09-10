@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% from "_card.html" import card %}
+{% block title %}{{ month_label }} — Billwatch{% endblock %}
+{% block content %}
+<h1>{{ month_label }}</h1>
+<p class="lede">The {{ records|length }} bills that moved furthest in Congress this month,
+ranked by what actually happened to them. <a href="{{ depth }}about.html">How this is scored.</a></p>
+
+{% for r in records %}{{ card(r, depth) }}{% endfor %}
+{% endblock %}

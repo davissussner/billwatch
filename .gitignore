@@ -1,8 +1,19 @@
 .env
 .venv/
-data/raw/
-data/*.db
-data/*.db-journal
 __pycache__/
 *.pyc
 .DS_Store
+
+# Regenerable from GovInfo bulk data -- and large.
+data/raw/
+data/*.db
+data/*.db-journal
+data/*.db-wal
+data/*.db-shm
+
+# Build output. Rebuilt from data/summaries/ + bulk data by build_site.
+site/
+
+# Generated summaries are the exception: they cost money and cannot be
+# reproduced byte-for-byte, so they are committed.
+!data/summaries/

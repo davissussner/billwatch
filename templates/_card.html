@@ -1,0 +1,27 @@
+{% macro card(r, depth, show_rank=True) %}
+<article class="card">
+  <div class="card-head">
+    {% if show_rank %}<span class="rank">{{ r.rank }}</span>{% endif %}
+    <div>
+      <a class="card-title" href="{{ depth }}{{ r.page }}">{{ r.title }}</a>
+      <p class="meta">
+        <span class="billno">{{ r.label }}</span>
+        {% if r.sponsor %}<span>{{ r.sponsor }}</span>{% endif %}
+        <span class="tier tier-{{ r.breakdown.top_action_tier }}">{{ r.tier_label }}</span>
+      </p>
+    </div>
+  </div>
+  {% if r.summary %}
+    <p class="takeaway">{{ r.summary.takeaway }}</p>
+  {% elif r.crs_summary %}
+    <p class="takeaway pending"><em>Summary pending.</em> CRS description: {{ r.crs_summary[:240] }}{% if r.crs_summary|length > 240 %}&hellip;{% endif %}</p>
+  {% else %}
+    <p class="takeaway pending"><em>Summary pending.</em></p>
+  {% endif %}
+  {% if r.topics %}
+  <p class="topics">
+    {% for t in r.topics %}<span class="chip">{{ t }}</span>{% endfor %}
+  </p>
+  {% endif %}
+</article>
+{% endmacro %}

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% from "_card.html" import card %}
+{% block title %}{{ topic }} — Billwatch{% endblock %}
+{% block content %}
+<h1>{{ topic }}</h1>
+<p class="lede">{{ records|length }} selected bills, newest month first.</p>
+
+{% set ns = namespace(current='') %}
+{% for r in records %}
+  {% if r.month != ns.current %}
+    {% set ns.current = r.month %}
+    <h2 class="month-divider">{{ r.month_label }}</h2>
+  {% endif %}
+  {{ card(r, depth, show_rank=False) }}
+{% endfor %}
+{% endblock %}

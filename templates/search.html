@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Search — Billwatch{% endblock %}
+{% block content %}
+<h1>Search</h1>
+<p class="lede">Every selected bill, searchable by title, sponsor, and summary.</p>
+
+<div class="searchbar">
+  <input type="search" id="q" placeholder="e.g. environment, fentanyl, Medicare" autocomplete="off" autofocus>
+  <div class="filters">
+    <select id="month"><option value="">All months</option>
+      {% for m, label in nav.months %}<option value="{{ m }}">{{ label }}</option>{% endfor %}
+    </select>
+    <select id="topic"><option value="">All topics</option>
+      {% for t, slug in nav.topics %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
+    </select>
+  </div>
+</div>
+
+<p id="count" class="note"></p>
+<div id="results"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/minisearch/7.2.0/umd/index.min.js"></script>
+<script>
+(async function () {
+  const results = document.getElementById('results');
+  const count = document.getElementById('count');
+  const q = document.getElementById('q');
+  const monthSel = document.getElementById('month');
+  const topicSel = document.getElementById('topic');
+
+  count.textContent = 'Loading index…';
+  let docs;
+  try {
+    docs = await (await fetch('data/search-index.json')).json();
+  } catch (e) {
+    count.textContent = 'Could not load the search index. If you opened this file directly from disk, '
+      + 'your browser blocks the fetch — serve the folder over HTTP instead (see the About page).';
+    return;
+  }
+
+  const mini = new MiniSearch({
+    fields: ['t', 's', 'k', 'l'],
+    storeFields: ['t', 'l', 'm', 'ml', 'tp', 's', 'k', 'u', 'r'],
+    searchOptions: { boost: { t: 3, l: 2 }, prefix: true, fuzzy: 0.2 }
+  });
+  mini.addAll(docs);
+
+  function render() {
+    const term = q.value.trim();
+    const month = monthSel.value;
+    const topic = topicSel.value;
+
+    let hits = term ? mini.search(term) : docs.slice();
+    if (month) hits = hits.filter(h => h.m === month);
+    if (topic) hits = hits.filter(h => (h.tp || []).includes(topic));
+    if (!term) hits.sort((a, b) => b.m.localeCompare(a.m) || a.r - b.r);
+
+    count.textContent = `${hits.length} result${hits.length === 1 ? '' : 's'}`;
+    results.innerHTML = hits.slice(0, 200).map(h => `
+      <article class="card">
+        <div class="card-head"><div>
+          <a class="card-title" href="${h.u}">${escapeHtml(h.t)}</a>
+          <p class="meta"><span class="billno">${escapeHtml(h.l)}</span>
+             <span>${escapeHtml(h.ml)}</span>
+             ${h.s ? `<span>${escapeHtml(h.s)}</span>` : ''}</p>
+        </div></div>
+        ${h.k ? `<p class="takeaway">${escapeHtml(h.k)}</p>` : ''}
+        ${(h.tp || []).map(t => `<span class="chip">${escapeHtml(t)}</span>`).join(' ')}
+      </article>`).join('');
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => (
+      { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  q.addEventListener('input', render);
+  monthSel.addEventListener('change', render);
+  topicSel.addEventListener('change', render);
+  render();
+})();
+</script>
+{% endblock %}
