@@ -6,7 +6,7 @@ import sqlite3
 from pathlib import Path
 
 PACKAGE_DIR = Path(__file__).parent
-PROJECT_ROOT = PACKAGE_DIR.parent.parent
+PROJECT_ROOT = PACKAGE_DIR.parent
 DATA_DIR = PROJECT_ROOT / "data"
 RAW_DIR = DATA_DIR / "raw"
 SITE_DIR = PROJECT_ROOT / "site"
