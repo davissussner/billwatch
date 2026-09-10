@@ -15,6 +15,7 @@ import argparse
 import json
 import re
 import shutil
+import time
 from collections import defaultdict
 from datetime import datetime, timezone
 
@@ -138,6 +139,28 @@ def load(conn) -> list[dict]:
     return records
 
 
+
+def clean_site_dir(attempts: int = 3) -> None:
+    """Remove site/ before a full rebuild.
+
+    Retries because macOS Finder can recreate .DS_Store inside a directory
+    while rmtree is walking it, which surfaces as "Directory not empty".
+    """
+    for attempt in range(attempts):
+        if not SITE_DIR.exists():
+            return
+        try:
+            shutil.rmtree(SITE_DIR)
+            return
+        except OSError:
+            if attempt == attempts - 1:
+                # Give up on removing the directory itself; every page is
+                # rewritten below, so a leftover dot-file is harmless.
+                shutil.rmtree(SITE_DIR, ignore_errors=True)
+            else:
+                time.sleep(0.2)
+
+
 def render(env, template: str, out_path, **context) -> None:
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(env.get_template(template).render(**context), encoding="utf-8")
@@ -153,8 +176,8 @@ def main() -> None:
     if not records:
         raise SystemExit("No selections found. Run `rank` first.")
 
-    if args.clean and SITE_DIR.exists():
-        shutil.rmtree(SITE_DIR)
+    if args.clean:
+        clean_site_dir()
     SITE_DIR.mkdir(parents=True, exist_ok=True)
 
     env = Environment(loader=FileSystemLoader(TEMPLATE_DIR), autoescape=select_autoescape(["html"]))

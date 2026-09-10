@@ -1,0 +1,77 @@
+name: Build and publish
+
+# Rankings are recomputed from fresh GovInfo bulk data, so the site stays
+# current without anyone running anything locally.
+#
+# Deliberately, this workflow never calls the Anthropic API. Summaries are
+# generated locally under human supervision and committed to data/summaries/;
+# CI only renders them. That means a scheduled build cannot spend money and
+# the API key never has to exist as a repository secret.
+on:
+  push:
+    branches: [main]
+  schedule:
+    # 09:00 UTC on the 3rd, once the previous month's actions have settled.
+    - cron: "0 9 3 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never let a scheduled run and a push run race to deploy.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      # ~50 MB of bulk ZIPs. ingest revalidates against Last-Modified, so a
+      # stale cache costs one HEAD request per bill type, not a re-download.
+      - name: Cache GovInfo bulk data
+        uses: actions/cache@v4
+        with:
+          path: data/raw
+          key: billstatus-119-${{ github.run_id }}
+          restore-keys: billstatus-119-
+
+      - name: Ingest bulk bill data
+        run: uv run python -m congress_summarizer.ingest --congress 119
+
+      - name: Rank every month
+        run: uv run python -m congress_summarizer.rank --all-months
+
+      # Rehydrate the committed summaries; the database itself is gitignored.
+      - name: Load committed summaries
+        run: uv run python -m congress_summarizer.store import
+
+      - name: Build site
+        run: uv run python -m congress_summarizer.build_site --clean
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
