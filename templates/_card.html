@@ -14,9 +14,9 @@
   {% if r.summary %}
     <p class="takeaway">{{ r.summary.takeaway }}</p>
   {% elif r.crs_summary %}
-    <p class="takeaway pending"><em>Summary pending.</em> CRS description: {{ r.crs_summary[:240] }}{% if r.crs_summary|length > 240 %}&hellip;{% endif %}</p>
+    <p class="takeaway pending"><em>Summary pending</em> CRS description: {{ r.crs_summary[:240] }}{% if r.crs_summary|length > 240 %}&hellip;{% endif %}</p>
   {% else %}
-    <p class="takeaway pending"><em>Summary pending.</em></p>
+    <p class="takeaway pending"><em>Summary pending</em></p>
   {% endif %}
   {% if r.topics %}
   <p class="topics">
