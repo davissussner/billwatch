@@ -696,6 +696,110 @@ td.evidence {
 .swatch-bipartisan { background: var(--seg-bipartisan); }
 .swatch-companion { background: var(--seg-companion); }
 
+/* ------------------------------------------------------- what to know box */
+
+.facts {
+  max-width: 74ch;
+  margin: 0 0 2rem;
+  padding: 1.25rem 1.4rem 1.1rem;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+}
+.facts-head {
+  margin: 0 0 .7rem;
+  padding: 0;
+  border: 0;
+  font-size: .72rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--quiet);
+}
+.facts-lede {
+  font-family: var(--serif);
+  font-size: 1.2rem;
+  line-height: 1.45;
+  margin: 0 0 1.2rem;
+  color: var(--ink);
+  text-wrap: pretty;
+}
+.facts-attrib {
+  display: block;
+  margin-top: .35rem;
+  font-family: var(--sans);
+  font-size: .74rem;
+  letter-spacing: .02em;
+  color: var(--quiet);
+}
+
+/* Steps a bill passes through; the furthest one reached is marked. */
+.stepper {
+  list-style: none;
+  display: flex;
+  margin: 0;
+  padding: 0;
+  gap: 2px;
+}
+.step {
+  flex: 1 1 0;
+  min-width: 0;
+  font-size: .68rem;
+  line-height: 1.3;
+  color: var(--quiet);
+}
+.step-dot {
+  display: block;
+  height: 5px;
+  border-radius: 2px;
+  background: var(--track);
+  margin-bottom: .4rem;
+}
+.step.done .step-dot { background: color-mix(in srgb, var(--accent) 45%, transparent); }
+.step.done .step-label { color: var(--ink-soft); }
+.step.current .step-dot { background: var(--accent); }
+.step.current .step-label { color: var(--accent); font-weight: 650; }
+.step-label { display: block; overflow-wrap: anywhere; }
+.step-note {
+  margin: .55rem 0 0;
+  font-size: .74rem;
+  color: var(--quiet);
+}
+
+.facts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: .85rem 1.25rem;
+  margin: 1.1rem 0 0;
+  padding-top: 1rem;
+  border-top: 1px solid var(--rule);
+}
+.facts-grid dt {
+  font-size: .68rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--quiet);
+}
+.facts-grid dd {
+  margin: .12rem 0 0;
+  font-size: .9rem;
+  color: var(--ink);
+}
+
+/* CRS prose, broken into sections but not rewritten. */
+.crs p { max-width: 70ch; }
+.crs-head {
+  margin: 1.6rem 0 .3rem;
+  font-size: .74rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: .09em;
+  color: var(--accent);
+}
+.crs-head + p { margin-top: 0; }
+
 /* ------------------------------------------------------------------ misc */
 
 pre {
@@ -768,6 +872,10 @@ footer p { margin: .4rem 0; max-width: 80ch; }
   .chart { padding: 1rem 1rem .9rem; }
   .chart-row { column-gap: .45rem; }
   .chart-name { font-size: .85rem; }
+  .facts { padding: 1rem 1.05rem; }
+  .facts-lede { font-size: 1.08rem; }
+  .stepper { flex-wrap: wrap; gap: .5rem .4rem; }
+  .step { flex: 1 1 30%; }
   .card-head { gap: .7rem; }
   .rank { font-size: 1.05rem; min-width: 1.5rem; }
   .card-title { font-size: 1.06rem; }
@@ -785,7 +893,8 @@ footer p { margin: .4rem 0; max-width: 80ch; }
   header.site, aside, .searchbar, footer { display: none; }
   .layout { display: block; padding: 0; max-width: none; }
   .card { break-inside: avoid; box-shadow: none; border: 0; border-bottom: 1px solid #ccc; border-radius: 0; }
-  .chart { break-inside: avoid; box-shadow: none; }
+  .chart, .facts { break-inside: avoid; box-shadow: none; }
+  .step-dot { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .chart-bar, .seg, .swatch, .chart-track { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .chart-bar { animation: none; }
   a { color: inherit; text-decoration: none; }

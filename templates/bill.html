@@ -11,8 +11,34 @@
   <span class="tier tier-{{ r.breakdown.top_action_tier }}">{{ r.tier_label }}</span>
 </p>
 
+<section class="facts">
+  <h2 class="facts-head">What you need to know</h2>
+
+  {% if r.summary %}<p class="facts-lede">{{ r.summary.takeaway }}</p>
+  {% elif r.crs_lede %}<p class="facts-lede">{{ r.crs_lede }}
+    <span class="facts-attrib">&mdash; Congressional Research Service</span></p>
+  {% endif %}
+
+  <ol class="stepper" aria-label="Furthest step reached in {{ r.month_label }}">
+    {% for step in r.progress %}
+    <li class="step{% if step.done %} done{% endif %}{% if step.current %} current{% endif %}">
+      <span class="step-dot"></span><span class="step-label">{{ step.label }}</span>
+    </li>
+    {% endfor %}
+  </ol>
+  <p class="step-note">Furthest step reached in {{ r.month_label }}.</p>
+
+  <dl class="facts-grid">
+    <div><dt>Status</dt><dd>{{ r.tier_label }}{% if r.latest_action_label %} &middot; {{ r.latest_action_label }}{% endif %}</dd></div>
+    {% if r.sponsor %}<div><dt>Sponsor</dt><dd>{{ r.sponsor }}</dd></div>{% endif %}
+    <div><dt>Cosponsors</dt><dd>{{ r.breakdown.cosponsors }}</dd></div>
+    {% if r.introduced_label %}<div><dt>Introduced</dt><dd>{{ r.introduced_label }}</dd></div>{% endif %}
+    {% if r.policy_area %}<div><dt>Policy area</dt><dd>{{ r.policy_area }}</dd></div>{% endif %}
+    <div><dt>Rank</dt><dd>#{{ r.rank }} in {{ r.month_label }}</dd></div>
+  </dl>
+</section>
+
 {% if r.summary %}
-<p class="takeaway big">{{ r.summary.takeaway }}</p>
 
 <section>
   <h2>What it does</h2>
@@ -64,14 +90,20 @@
 {% endif %}
 
 {% else %}
-<div class="callout">
-  <p><strong>No generated summary yet.</strong> This bill was selected for {{ r.month_label }}
-  but has not been summarized.</p>
-  {% if r.crs_summary %}
-  <h3>Congressional Research Service summary</h3>
-  <p>{{ r.crs_summary }}</p>
+<section class="crs">
+  <h2>What the record says</h2>
+  <p class="note">Billwatch has not written its own summary of this bill yet. Below is the
+  Congressional Research Service&rsquo;s summary, broken into sections but otherwise unedited.</p>
+
+  {% if r.crs_body %}
+    {% for part in r.crs_body %}
+      {% if part.heading %}<h3 class="crs-head">{{ part.heading }}</h3>{% endif %}
+      <p>{{ part.text }}</p>
+    {% endfor %}
+  {% elif not r.crs_lede %}
+    <p class="note">No CRS summary is available for this bill.</p>
   {% endif %}
-</div>
+</section>
 {% endif %}
 
 <section>

@@ -113,6 +113,117 @@ def chart_rows(records: list[dict], limit: int = 10) -> list[dict]:
     return rows
 
 
+# --- CRS summary presentation -------------------------------------------
+#
+# CRS summaries arrive as a single unbroken string that opens by restating the
+# bill title. Nothing below rewrites a word: the redundant title is dropped and
+# the text is broken at the discourse markers CRS uses consistently, so the
+# same sentences read as paragraphs instead of a wall.
+
+# Marker -> the sub-head that paragraph gets. Each heading just restates the
+# paragraph's own opening clause, so it cannot say more than CRS said.
+CRS_MARKERS = [
+    ("Under current law", "Under current law"),
+    ("Specifically", "What it does"),
+    ("The bill also", "Also in the bill"),
+    ("This bill also", "Also in the bill"),
+    ("The resolution also", "Also in the resolution"),
+    ("In addition", "Also in the bill"),
+    ("Additionally", "Also in the bill"),
+    ("Finally", "Also in the bill"),
+]
+CRS_SPLIT = re.compile(
+    r"(?<=\.)\s+(?=(?:" + "|".join(re.escape(m) for m, _ in CRS_MARKERS) + r")\b)"
+)
+SENTENCE_SPLIT = re.compile(r"(?<=\.)\s+(?=[A-Z(])")
+
+# Paragraphs longer than this get grouped into shorter ones at sentence breaks.
+PARAGRAPH_CHARS = 600
+
+
+def crs_clean(summary: str | None, title: str | None) -> str:
+    """The CRS summary with its restatement of the bill title removed."""
+    text = (summary or "").strip()
+    if title and text.startswith(title.strip()):
+        text = text[len(title.strip()):].strip()
+    return text
+
+
+def crs_sections(text: str) -> tuple[str, list[dict]]:
+    """Split a cleaned CRS summary into a lede sentence and headed paragraphs."""
+    if not text:
+        return "", []
+
+    chunks = [c.strip() for c in CRS_SPLIT.split(text) if c.strip()]
+
+    # The opening sentence is the thesis -- CRS almost always leads with
+    # "This bill does X" -- so it stands alone above the rest.
+    first = chunks[0]
+    sentences = SENTENCE_SPLIT.split(first)
+    lede = sentences[0].strip()
+    remainder = " ".join(sentences[1:]).strip()
+    rest = ([remainder] if remainder else []) + chunks[1:]
+
+    sections = []
+    for chunk in rest:
+        heading = next((h for marker, h in CRS_MARKERS if chunk.startswith(marker)), None)
+        for para in _wrap_paragraphs(chunk):
+            sections.append({"heading": heading, "text": para})
+            heading = None  # only the first paragraph of a chunk is headed
+    return lede, sections
+
+
+def _wrap_paragraphs(chunk: str) -> list[str]:
+    """Group a long run of sentences into paragraphs of readable length."""
+    if len(chunk) <= PARAGRAPH_CHARS:
+        return [chunk]
+    paragraphs, current = [], ""
+    for sentence in SENTENCE_SPLIT.split(chunk):
+        candidate = f"{current} {sentence}".strip()
+        if current and len(candidate) > PARAGRAPH_CHARS:
+            paragraphs.append(current)
+            current = sentence
+        else:
+            current = candidate
+    if current:
+        paragraphs.append(current)
+    return paragraphs
+
+
+# --- How far a bill got --------------------------------------------------
+#
+# The steps a bill passes through, in order. The tier recorded on a selection
+# is the furthest action *that month*, so the stepper is labelled as such
+# rather than implying the bill cleared every earlier step in the same month.
+PROGRESS_STAGES = [
+    ("introduced", "Introduced"),
+    ("committee_action", "In committee"),
+    ("reported", "Reported"),
+    ("passed_chamber", "Passed a chamber"),
+    ("to_president", "To the President"),
+    ("became_law", "Became law"),
+]
+# Tiers that are real activity but sit outside the ladder.
+STAGE_ALIASES = {"amendment": "introduced", "other": "introduced"}
+
+
+def progress(tier: str) -> list[dict]:
+    names = [name for name, _ in PROGRESS_STAGES]
+    resolved = STAGE_ALIASES.get(tier, tier)
+    reached = names.index(resolved) if resolved in names else 0
+    return [{"name": name, "label": label, "done": i < reached, "current": i == reached}
+            for i, (name, label) in enumerate(PROGRESS_STAGES)]
+
+
+def pretty_date(value: str | None) -> str:
+    if not value:
+        return ""
+    try:
+        return datetime.strptime(value[:10], "%Y-%m-%d").strftime("%B %-d, %Y")
+    except ValueError:
+        return value
+
+
 def slugify(value: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
 
@@ -152,6 +263,9 @@ def load(conn) -> list[dict]:
             mapped = POLICY_AREA_TO_TOPIC.get(row["policy_area"] or "")
             topics = [mapped] if mapped else []
 
+        clean = crs_clean(row["crs_summary"], row["title"])
+        crs_lede, crs_body = crs_sections(clean)
+
         records.append({
             "bill_id": row["bill_id"],
             "month": row["month"],
@@ -169,6 +283,12 @@ def load(conn) -> list[dict]:
             "latest_action_date": row["latest_action_date"],
             "latest_action_text": row["latest_action_text"],
             "crs_summary": row["crs_summary"],
+            "crs_clean": clean,
+            "crs_lede": crs_lede,
+            "crs_body": crs_body,
+            "progress": progress(breakdown.get("top_action_tier", "")),
+            "introduced_label": pretty_date(row["introduced_date"]),
+            "latest_action_label": pretty_date(row["latest_action_date"]),
             "url": row["congress_gov_url"],
             "summary": summary,
             "model": row["model"],
@@ -279,7 +399,7 @@ def main() -> None:
         "ml": r["month_label"],
         "tp": r["topics"],
         "s": r["sponsor"] or "",
-        "k": (r["summary"]["takeaway"] if r["summary"] else (r["crs_summary"] or "")[:300]),
+        "k": (r["summary"]["takeaway"] if r["summary"] else (r["crs_lede"] or r["crs_clean"])[:300]),
         "u": r["page"],
         "r": r["rank"],
     } for r in records]
