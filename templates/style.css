@@ -25,6 +25,12 @@
   --cmte-soft: rgba(138, 90, 18, .1);
   --idle-soft: rgba(115, 125, 140, .1);
 
+  --seg-action: #1257a5;
+  --seg-cosponsors: #6d9fd4;
+  --seg-bipartisan: #12724a;
+  --seg-companion: #b8862b;
+  --track: rgba(115, 125, 140, .12);
+
   --shadow: 0 1px 2px rgba(15, 23, 42, .04), 0 4px 14px rgba(15, 23, 42, .05);
   --shadow-lift: 0 1px 2px rgba(15, 23, 42, .05), 0 10px 26px rgba(15, 23, 42, .09);
 
@@ -57,6 +63,12 @@
     --cmte: #d9b35c;
     --cmte-soft: rgba(217, 179, 92, .14);
     --idle-soft: rgba(141, 150, 166, .13);
+
+    --seg-action: #5e9ede;
+    --seg-cosponsors: #33608f;
+    --seg-bipartisan: #3fae7a;
+    --seg-companion: #c99a3f;
+    --track: rgba(141, 150, 166, .16);
 
     --shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 4px 14px rgba(0, 0, 0, .35);
     --shadow-lift: 0 1px 2px rgba(0, 0, 0, .55), 0 12px 28px rgba(0, 0, 0, .45);
@@ -551,6 +563,139 @@ td.evidence {
   margin: 0 0 .9rem;
 }
 
+/* ----------------------------------------------------------------- chart */
+
+.chart {
+  margin: 0 0 2rem;
+  padding: 1.25rem 1.35rem 1.1rem;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+}
+.chart figcaption { margin-bottom: 1.1rem; }
+.chart-title {
+  display: block;
+  font-family: var(--serif);
+  font-size: 1.16rem;
+  font-weight: 650;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+}
+.chart-sub {
+  display: block;
+  margin-top: .15rem;
+  font-size: .82rem;
+  color: var(--quiet);
+}
+
+.chart-rows { list-style: none; margin: 0; padding: 0; }
+
+.chart-row {
+  display: grid;
+  grid-template-columns: 1.5rem minmax(0, 1fr) auto;
+  grid-template-areas:
+    "rank name  score"
+    ".    track track";
+  align-items: baseline;
+  column-gap: .6rem;
+  row-gap: .3rem;
+  padding: .5rem 0;
+  border-bottom: 1px solid var(--rule-soft);
+}
+.chart-row:last-child { border-bottom: 0; }
+
+.chart-rank {
+  grid-area: rank;
+  font-variant-numeric: tabular-nums;
+  font-size: .8rem;
+  font-weight: 650;
+  color: var(--quiet);
+  text-align: right;
+}
+.chart-name {
+  grid-area: name;
+  font-size: .9rem;
+  line-height: 1.4;
+  color: var(--ink);
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.chart-name:hover { color: var(--accent); text-decoration: underline; }
+.chart-billno {
+  font-family: var(--mono);
+  font-size: .72em;
+  font-weight: 600;
+  color: var(--ink-soft);
+  background: var(--bg-soft);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: .06rem .34rem;
+  margin-right: .45rem;
+  white-space: nowrap;
+}
+.chart-score {
+  grid-area: score;
+  font-variant-numeric: tabular-nums;
+  font-size: .82rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.chart-track {
+  grid-area: track;
+  background: var(--track);
+  border-radius: 3px;
+  height: 9px;
+  overflow: hidden;
+}
+.chart-bar {
+  display: flex;
+  height: 100%;
+  border-radius: 3px;
+  overflow: hidden;
+  min-width: 2px;
+  /* Bars grow on load so the ranking reads as a ranking. */
+  animation: chart-grow .55s cubic-bezier(.22, .8, .3, 1) both;
+}
+.chart-row:nth-child(2) .chart-bar { animation-delay: .03s; }
+.chart-row:nth-child(3) .chart-bar { animation-delay: .06s; }
+.chart-row:nth-child(4) .chart-bar { animation-delay: .09s; }
+.chart-row:nth-child(5) .chart-bar { animation-delay: .12s; }
+.chart-row:nth-child(6) .chart-bar { animation-delay: .15s; }
+.chart-row:nth-child(7) .chart-bar { animation-delay: .18s; }
+.chart-row:nth-child(8) .chart-bar { animation-delay: .21s; }
+.chart-row:nth-child(9) .chart-bar { animation-delay: .24s; }
+.chart-row:nth-child(10) .chart-bar { animation-delay: .27s; }
+@keyframes chart-grow { from { transform: scaleX(0); transform-origin: left; } }
+
+.seg { display: block; height: 100%; }
+.seg-action { background: var(--seg-action); }
+.seg-cosponsors { background: var(--seg-cosponsors); }
+.seg-bipartisan { background: var(--seg-bipartisan); }
+.seg-companion { background: var(--seg-companion); }
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .35rem 1rem;
+  margin: 1rem 0 0;
+  padding-top: .85rem;
+  border-top: 1px solid var(--rule);
+  font-size: .76rem;
+  color: var(--quiet);
+}
+.key { display: inline-flex; align-items: center; gap: .4rem; }
+.swatch { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+.swatch-action { background: var(--seg-action); }
+.swatch-cosponsors { background: var(--seg-cosponsors); }
+.swatch-bipartisan { background: var(--seg-bipartisan); }
+.swatch-companion { background: var(--seg-companion); }
+
 /* ------------------------------------------------------------------ misc */
 
 pre {
@@ -620,6 +765,9 @@ footer p { margin: .4rem 0; max-width: 80ch; }
 @media (max-width: 560px) {
   :root { --gutter: 1rem; }
   .card { padding: .95rem 1rem; }
+  .chart { padding: 1rem 1rem .9rem; }
+  .chart-row { column-gap: .45rem; }
+  .chart-name { font-size: .85rem; }
   .card-head { gap: .7rem; }
   .rank { font-size: 1.05rem; min-width: 1.5rem; }
   .card-title { font-size: 1.06rem; }
@@ -637,6 +785,9 @@ footer p { margin: .4rem 0; max-width: 80ch; }
   header.site, aside, .searchbar, footer { display: none; }
   .layout { display: block; padding: 0; max-width: none; }
   .card { break-inside: avoid; box-shadow: none; border: 0; border-bottom: 1px solid #ccc; border-radius: 0; }
+  .chart { break-inside: avoid; box-shadow: none; }
+  .chart-bar, .seg, .swatch, .chart-track { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .chart-bar { animation: none; }
   a { color: inherit; text-decoration: none; }
   body { font-size: 11pt; background: #fff; color: #000; }
 }

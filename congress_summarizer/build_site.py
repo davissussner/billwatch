@@ -72,6 +72,47 @@ TIER_LABEL = {
 }
 
 
+# The score is a sum of four components. Charting them stacked shows why a
+# bill ranked where it did, which a single bar cannot.
+SCORE_PARTS = [
+    ("action", "top_action_points", "Action reached"),
+    ("cosponsors", "cosponsor_points", "Cosponsors"),
+    ("bipartisan", "bipartisan_points", "Bipartisan"),
+    ("companion", "companion_points", "Companion bill"),
+]
+
+
+def chart_rows(records: list[dict], limit: int = 10) -> list[dict]:
+    """Top-ranked bills as stacked bar rows, widest bar first.
+
+    Bar length is the final score, so the multiplier that shrinks ceremonial
+    bills shortens the whole bar rather than distorting one segment. Segment
+    widths are shares of the pre-multiplier subtotal.
+    """
+    top = records[:limit]
+    if not top:
+        return []
+
+    widest = max(r["score"] for r in top) or 1
+    rows = []
+    for record in top:
+        breakdown = record["breakdown"]
+        parts = [(name, label, max(breakdown.get(key) or 0, 0))
+                 for name, key, label in SCORE_PARTS]
+        subtotal = sum(points for _, _, points in parts)
+        rows.append({
+            "record": record,
+            "width": round(record["score"] / widest * 100, 2),
+            "segments": [{
+                "name": name,
+                "label": label,
+                "points": round(points, 1),
+                "pct": round(points / subtotal * 100, 2) if subtotal else 0,
+            } for name, label, points in parts if points > 0],
+        })
+    return rows
+
+
 def slugify(value: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
 
@@ -209,12 +250,13 @@ def main() -> None:
 
     latest = months[0]
     render(env, "month.html", SITE_DIR / "index.html", records=by_month[latest], month=latest,
-           month_label=month_label(latest), nav=nav, stats=stats, is_index=True, depth="")
+           month_label=month_label(latest), nav=nav, stats=stats, is_index=True, depth="",
+           chart=chart_rows(by_month[latest]))
 
     for month in months:
         render(env, "month.html", SITE_DIR / "months" / f"{month}.html", records=by_month[month],
                month=month, month_label=month_label(month), nav=nav, stats=stats,
-               is_index=False, depth="../")
+               is_index=False, depth="../", chart=chart_rows(by_month[month]))
 
     for topic in topics:
         render(env, "topic.html", SITE_DIR / "topics" / f"{topic_slugs[topic]}.html",

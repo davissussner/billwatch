@@ -1,0 +1,40 @@
+{# Top-ranked bills as stacked bars. Plain elements, no SVG and no script:
+   the text stays real text at every width, and it prints. #}
+{% macro top_chart(rows, depth, month_label) %}
+{% if rows %}
+<figure class="chart">
+  <figcaption>
+    <span class="chart-title">The 10 that moved furthest</span>
+    <span class="chart-sub">Bar length is the momentum score. Segments show what earned it.</span>
+  </figcaption>
+
+  <ol class="chart-rows">
+    {% for row in rows %}
+    <li class="chart-row">
+      <span class="chart-rank">{{ loop.index }}</span>
+      <a class="chart-name" href="{{ depth }}{{ row.record.page }}">
+        <span class="chart-billno">{{ row.record.label }}</span>{{ row.record.title }}
+      </a>
+      <span class="chart-score">{{ row.record.score }}</span>
+      <div class="chart-track">
+        <div class="chart-bar" style="width: {{ row.width }}%"
+             aria-label="Score {{ row.record.score }}. {{ row.record.tier_label }}.">
+          {% for s in row.segments %}
+          <span class="seg seg-{{ s.name }}" style="width: {{ s.pct }}%"
+                title="{{ s.label }}: {{ s.points }} points"></span>
+          {% endfor %}
+        </div>
+      </div>
+    </li>
+    {% endfor %}
+  </ol>
+
+  <p class="chart-legend">
+    {% for name, label in [("action", "Action reached"), ("cosponsors", "Cosponsors"),
+                           ("bipartisan", "Bipartisan"), ("companion", "Companion bill")] %}
+    <span class="key"><span class="swatch swatch-{{ name }}"></span>{{ label }}</span>
+    {% endfor %}
+  </p>
+</figure>
+{% endif %}
+{% endmacro %}
